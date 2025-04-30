@@ -12,17 +12,82 @@ import {
 	fontColors,
 	fontFamilyOptions,
 	fontSizeOptions,
+	OptionType,
 } from 'src/constants/articleProps';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
+import { useOutsideClickClose } from 'src/ui/select/hooks/useOutsideClickClose';
+import { useRef, useState } from 'react';
 
-export const ArticleParamsForm = () => {
-	const defaultFont = defaultArticleState.fontFamilyOption;
+export type ArticleFormProps = {
+	font: OptionType;
+	fontSize: OptionType;
+	fontColor: OptionType;
+	bgColor: OptionType;
+	width: OptionType;
+	onClick?: (state: ArticleFormProps) => void;
+};
+
+export const ArticleParamsForm = (props: ArticleFormProps) => {
+	const [isOpen, setIsOpen] = useState<boolean>(false);
+	const rootRef = useRef<HTMLDivElement>(null);
+
+	const [font, setFont] = useState(props.font);
+	const [fontSize, setFontSize] = useState(props.fontSize);
+	const [fontColor, setFontColor] = useState(props.fontColor);
+	const [bgColor, setBgColor] = useState(props.bgColor);
+	const [width, setWidth] = useState(props.width);
+
+	const toggleButton = () => {
+		formUpdate();
+		setIsOpen(isOpen ? false : true);
+	};
+
+	const handleSubmitClick = ({
+		font,
+		fontSize,
+		fontColor,
+		bgColor,
+		width,
+	}: ArticleFormProps) => {
+		const state = { font, fontSize, fontColor, bgColor, width };
+		props.onClick?.(state);
+		event?.preventDefault();
+		setIsOpen(false);
+	};
+
+	function formUpdate() {
+		setFont(props.font);
+		setFontSize(props.fontSize);
+		setFontColor(props.fontColor);
+		setBgColor(props.bgColor);
+		setWidth(props.width);
+	}
+
+	const handleResetClick = () => {
+		const newState = {
+			font: defaultArticleState.fontFamilyOption,
+			fontSize: defaultArticleState.fontSizeOption,
+			fontColor: defaultArticleState.fontColor,
+			bgColor: defaultArticleState.backgroundColor,
+			width: defaultArticleState.contentWidth,
+		};
+		props.onClick?.(newState);
+		setIsOpen(false);
+	};
+
+	useOutsideClickClose({
+		isOpen,
+		rootRef,
+		onChange: setIsOpen,
+	});
 
 	return (
 		<>
-			<ArrowButton isOpen={true} onClick={() => {}} />
-			<aside className={clsx(styles.container, styles.container_open)}>
+			<ArrowButton isOpen={isOpen} onClick={toggleButton} />
+			<aside
+				ref={rootRef}
+				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
 				<form className={styles.form}>
 					<Text as='h2' size={31} weight={800} uppercase>
 						Задайте параметры
@@ -30,60 +95,55 @@ export const ArticleParamsForm = () => {
 
 					<Select
 						title='шрифт'
-						selected={defaultFont}
-						options={fontFamilyOptions}></Select>
+						selected={font}
+						options={fontFamilyOptions}
+						onChange={setFont}></Select>
 
 					<RadioGroup
-						name={'размер шрифта'}
+						name=''
 						options={fontSizeOptions}
-						selected={{
-							title: '',
-							value: '',
-							className: '',
-							optionClassName: undefined,
-						}}
-						title={''}></RadioGroup>
+						selected={fontSize}
+						onChange={setFontSize}
+						title={'размер шрифта'}></RadioGroup>
+
 					<Select
 						title='Цвет шрифта'
-						selected={null}
+						selected={fontColor}
+						onChange={setFontColor}
 						options={fontColors}></Select>
+
 					<Separator></Separator>
+
 					<Select
 						title='Цвет фона'
-						selected={null}
-						options={backgroundColors}></Select>
+						selected={bgColor}
+						options={backgroundColors}
+						onChange={setBgColor}></Select>
+
 					<Select
 						title='Ширина контента'
-						selected={null}
-						options={contentWidthArr}></Select>
+						selected={width}
+						options={contentWidthArr}
+						onChange={setWidth}></Select>
 
 					<div className={styles.bottomContainer}>
-						<Button title='Сбросить' htmlType='reset' type='clear' />
-						<Button title='Применить' htmlType='submit' type='apply' />
+						<Button
+							title='Сбросить'
+							htmlType='reset'
+							type='clear'
+							onClick={() => handleResetClick()}
+						/>
+						<Button
+							title='Применить'
+							htmlType='submit'
+							type='apply'
+							onClick={() =>
+								handleSubmitClick({ font, fontSize, fontColor, bgColor, width })
+							}
+						/>
 					</div>
 				</form>
 			</aside>
 		</>
 	);
 };
-
-/*
-
-width: 362px;
-height: 42px;
-
-font-family: 'Open Sans';
-font-style: normal;
-font-weight: 800;
-font-size: 31px;
-line-height: 42px;
-text-align: center;
-text-transform: uppercase;
-
-color: #000000;
-
-flex: none;
-order: 0;
-flex-grow: 0;
-
-*/
