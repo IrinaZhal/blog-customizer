@@ -20,89 +20,98 @@ import { useOutsideClickClose } from 'src/ui/select/hooks/useOutsideClickClose';
 import { useRef, useState } from 'react';
 
 export type ArticleFormProps = {
-	font: OptionType;
-	fontSize: OptionType;
+	fontFamilyOption: OptionType;
+	fontSizeOption: OptionType;
 	fontColor: OptionType;
-	bgColor: OptionType;
-	width: OptionType;
-	onClick?: (state: ArticleFormProps) => void;
+	backgroundColor: OptionType;
+	contentWidth: OptionType;
 };
 
-export const ArticleParamsForm = (props: ArticleFormProps) => {
-	const [isOpen, setIsOpen] = useState<boolean>(false);
+export const ArticleParamsForm = ({
+	currentArticleState,
+	setCurrentArticleState,
+}: {
+	currentArticleState: ArticleFormProps;
+	setCurrentArticleState: (newState: ArticleFormProps) => void;
+}) => {
+	const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
 	const rootRef = useRef<HTMLDivElement>(null);
 
-	const [font, setFont] = useState(props.font);
-	const [fontSize, setFontSize] = useState(props.fontSize);
-	const [fontColor, setFontColor] = useState(props.fontColor);
-	const [bgColor, setBgColor] = useState(props.bgColor);
-	const [width, setWidth] = useState(props.width);
+	const [fontFamilyOption, setFont] = useState(
+		currentArticleState.fontFamilyOption
+	);
+	const [fontSizeOption, setFontSize] = useState(
+		currentArticleState.fontSizeOption
+	);
+	const [fontColor, setFontColor] = useState(currentArticleState.fontColor);
+	const [backgroundColor, setBgColor] = useState(
+		currentArticleState.backgroundColor
+	);
+	const [contentWidth, setWidth] = useState(currentArticleState.contentWidth);
 
 	const toggleButton = () => {
 		formUpdate();
-		setIsOpen(isOpen ? false : true);
-	};
-
-	const handleSubmitClick = ({
-		font,
-		fontSize,
-		fontColor,
-		bgColor,
-		width,
-	}: ArticleFormProps) => {
-		const state = { font, fontSize, fontColor, bgColor, width };
-		props.onClick?.(state);
-		event?.preventDefault();
-		setIsOpen(false);
+		setIsFormOpen(isFormOpen ? false : true);
 	};
 
 	function formUpdate() {
-		setFont(props.font);
-		setFontSize(props.fontSize);
-		setFontColor(props.fontColor);
-		setBgColor(props.bgColor);
-		setWidth(props.width);
+		setFont(currentArticleState.fontFamilyOption);
+		setFontSize(currentArticleState.fontSizeOption);
+		setFontColor(currentArticleState.fontColor);
+		setBgColor(currentArticleState.backgroundColor);
+		setWidth(currentArticleState.contentWidth);
 	}
 
+	const handleSubmitClick = () => {
+		setCurrentArticleState({
+			fontFamilyOption,
+			fontSizeOption,
+			fontColor,
+			backgroundColor,
+			contentWidth,
+		});
+		event?.preventDefault();
+		setIsFormOpen(false);
+	};
+
 	const handleResetClick = () => {
-		const newState = {
-			font: defaultArticleState.fontFamilyOption,
-			fontSize: defaultArticleState.fontSizeOption,
-			fontColor: defaultArticleState.fontColor,
-			bgColor: defaultArticleState.backgroundColor,
-			width: defaultArticleState.contentWidth,
-		};
-		props.onClick?.(newState);
-		setIsOpen(false);
+		setCurrentArticleState(defaultArticleState);
+		event?.preventDefault();
+		setIsFormOpen(false);
 	};
 
 	useOutsideClickClose({
-		isOpen,
+		isOpen: isFormOpen,
 		rootRef,
-		onChange: setIsOpen,
+		onChange: setIsFormOpen,
 	});
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={toggleButton} />
+			<ArrowButton isOpen={isFormOpen} onClick={toggleButton} />
 			<aside
 				ref={rootRef}
-				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
-				<form className={styles.form}>
+				className={clsx(styles.container, {
+					[styles.container_open]: isFormOpen,
+				})}>
+				<form
+					onSubmit={handleSubmitClick}
+					onReset={handleResetClick}
+					className={styles.form}>
 					<Text as='h2' size={31} weight={800} uppercase>
 						Задайте параметры
 					</Text>
 
 					<Select
 						title='шрифт'
-						selected={font}
+						selected={fontFamilyOption}
 						options={fontFamilyOptions}
 						onChange={setFont}></Select>
 
 					<RadioGroup
-						name=''
+						name='radio'
 						options={fontSizeOptions}
-						selected={fontSize}
+						selected={fontSizeOption}
 						onChange={setFontSize}
 						title={'размер шрифта'}></RadioGroup>
 
@@ -116,31 +125,19 @@ export const ArticleParamsForm = (props: ArticleFormProps) => {
 
 					<Select
 						title='Цвет фона'
-						selected={bgColor}
+						selected={backgroundColor}
 						options={backgroundColors}
 						onChange={setBgColor}></Select>
 
 					<Select
 						title='Ширина контента'
-						selected={width}
+						selected={contentWidth}
 						options={contentWidthArr}
 						onChange={setWidth}></Select>
 
 					<div className={styles.bottomContainer}>
-						<Button
-							title='Сбросить'
-							htmlType='reset'
-							type='clear'
-							onClick={() => handleResetClick()}
-						/>
-						<Button
-							title='Применить'
-							htmlType='submit'
-							type='apply'
-							onClick={() =>
-								handleSubmitClick({ font, fontSize, fontColor, bgColor, width })
-							}
-						/>
+						<Button title='Сбросить' htmlType='reset' type='clear' />
+						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
 			</aside>
